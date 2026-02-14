@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Valentýn</title>
+
+<style>
+:root{
+  --bg1:#ffe6ee;
+  --bg2:#fff6fa;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  height:100vh;
+  overflow:hidden;
+  font-family:system-ui, Arial, sans-serif;
+  background: radial-gradient(circle at top,var(--bg2),var(--bg1));
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* karta */
+.card{
+  background:rgba(255,255,255,.85);
+  padding:30px;
+  border-radius:20px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+h1{
+  margin:0 0 20px;
+  font-size:36px;
+}
+
+button{
+  padding:12px 20px;
+  font-size:18px;
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  margin:5px;
+  transition:.3s;
+}
+
+#yesBtn{background:#ff4d7d;color:white;}
+#noBtn{background:white;}
+
+button:hover{transform:scale(1.05);}
+
+.msg{
+  margin-top:15px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* lama */
+.llama{
+  position:fixed;
+  width:220px;
+  pointer-events:none;
+  transition:all .6s ease;
+}
+
+/* lama1 pravý dolní roh */
+.rightBottom{
+  right:-120px;
+  bottom:-120px;
+  transform:translate(-30px,-30px);
+}
+
+/* lama2 levý dolní roh */
+.leftBottom{
+  left:-120px;
+  bottom:-120px;
+  transform:translate(30px,-30px);
+}
+
+/* pejsek */
+.dog{
+  position:fixed;
+  bottom:20px;
+  left:-200px;
+  width:130px;
+  opacity:0;
+  pointer-events:none;
+  transition:transform 3.5s linear, opacity .3s;
+}
+</style>
+</head>
+
+<body>
+
+<img id="llama" class="llama rightBottom" src="lama1.png">
+<img id="dog" class="dog" src="pejsek.png">
+
+<div class="card">
+  <h1>Budeš můj Valentýn?</h1>
+  <div id="buttons">
+    <button id="yesBtn">ANO</button>
+    <button id="noBtn">NE</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+const llama = document.getElementById("llama");
+const dog = document.getElementById("dog");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const msg = document.getElementById("msg");
+
+noBtn.addEventListener("click", () => {
+
+  // změna lamy
+  llama.src = "lama2.png";
+  llama.classList.remove("rightBottom");
+  llama.classList.add("leftBottom");
+
+  // pejsek se objeví
+  dog.style.opacity = "1";
+
+  // zjistíme pozici tlačítka
+  const rect = noBtn.getBoundingClientRect();
+  const buttonY = rect.top;
+
+  // nastavíme psa do výšky tlačítka
+  dog.style.bottom = (window.innerHeight - buttonY - 60) + "px";
+
+  // pes běží přes celou obrazovku
+  setTimeout(()=>{
+    dog.style.transform = "translateX(" + (window.innerWidth + 400) + "px)";
+  },100);
+
+  // tlačítko „přichytíme“ k psovi
+  setTimeout(()=>{
+    noBtn.style.position = "fixed";
+    noBtn.style.left = rect.left + "px";
+    noBtn.style.top = rect.top + "px";
+    noBtn.style.transition = "transform 3.5s linear, opacity .3s";
+    noBtn.style.transform = "translateX(" + (window.innerWidth + 400) + "px)";
+    noBtn.style.opacity = "0";
+  },500);
+});
+
+yesBtn.addEventListener("click", ()=>{
+  msg.innerHTML = "Miluju tě! 💖";
+  document.getElementById("buttons").style.display = "none";
+});
+</script>
+
+</body>
+</html>
