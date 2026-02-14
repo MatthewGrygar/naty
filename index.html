@@ -6,292 +6,269 @@
 <title>Valentýn</title>
 
 <style>
-  :root{
-    --bg1:#ffe6ee;
-    --bg2:#fff6fa;
-    --card: rgba(255,255,255,.86);
-    --shadow: 0 10px 26px rgba(0,0,0,.14);
-  }
+:root{
+  --bg1:#ffe6ee;
+  --bg2:#fff6fa;
+  --card: rgba(255,255,255,.86);
+}
 
-  *{ box-sizing:border-box; }
-  html,body{ height:100%; }
+*{box-sizing:border-box;}
+html,body{height:100%;}
 
-  body{
-    margin:0;
-    overflow:hidden;
-    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: radial-gradient(1100px 700px at 50% 0%, var(--bg2), var(--bg1));
-    color:#2a1b22;
-    display:grid;
-    place-items:center;
-    padding:16px;
-  }
+body{
+  margin:0;
+  overflow:hidden;
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1100px 700px at 50% 0%, var(--bg2), var(--bg1));
+  display:grid;
+  place-items:center;
+}
 
-  /* Confetti overlay */
-  #confetti{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:1;
-  }
+/* ================= LOADER ================= */
 
-  /* Mobile-first card */
-  .card{
-    width:min(360px, 92vw);
-    background:var(--card);
-    border-radius:18px;
-    box-shadow:var(--shadow);
-    padding:16px 14px;
-    text-align:center;
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,.6);
-    z-index:2;
-  }
+#loader{
+  position:fixed;
+  inset:0;
+  background: radial-gradient(circle,var(--bg2),var(--bg1));
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:9999;
+  transition:opacity .6s ease, visibility .6s ease;
+}
 
-  h1{
-    margin:0 0 12px;
-    font-size: clamp(22px, 6vw, 30px);
-    line-height:1.15;
-  }
+.loader-heart{
+  font-size:40px;
+  animation:pulse 1s infinite;
+}
 
-  .btns{
-    display:flex;
-    gap:10px;
-    justify-content:center;
-    margin-top:10px;
-  }
+@keyframes pulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.2);}
+}
 
-  button{
-    padding:10px 16px;
-    font-size: clamp(16px, 4.2vw, 18px);
-    border:none;
-    border-radius:999px;
-    cursor:pointer;
-    box-shadow: 0 8px 16px rgba(0,0,0,.12);
-    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-    user-select:none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  button:active{ transform: scale(.98); }
+.loader-text{
+  margin-top:10px;
+  font-weight:600;
+}
 
-  #yesBtn{ background:#ff4d7d; color:white; }
-  #noBtn{ background:white; color:#3b2430; border:1px solid rgba(0,0,0,.08); }
+/* hidden state */
+#loader.hidden{
+  opacity:0;
+  visibility:hidden;
+}
 
-  .msg{
-    margin-top:12px;
-    min-height:28px;
-    font-size: clamp(18px, 5vw, 22px);
-    font-weight:800;
-  }
+/* ================= CONTENT ================= */
 
-  /* Lamas */
-  .llama{
-    position:fixed;
-    width:210px;
-    height:auto;
-    pointer-events:none;
-    z-index:0;
-    filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
-    transition: left .5s ease, right .5s ease, bottom .5s ease, transform .5s ease;
-  }
+.card{
+  width:min(360px, 92vw);
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:0 10px 26px rgba(0,0,0,.14);
+  padding:16px 14px;
+  text-align:center;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.6);
+  z-index:2;
+}
 
-  /* lama1 – pravý dolní roh, lehce doleva */
-  .llama-right{
-    right:-115px;
-    bottom:-110px;
-    transform: translate(-18px,-18px) rotate(-8deg);
-  }
+h1{
+  margin:0 0 12px;
+  font-size: clamp(22px, 6vw, 30px);
+}
 
-  /* lama2 – levý dolní roh, lehce doprava */
-  .llama-left{
-    left:-115px;
-    bottom:-110px;
-    transform: translate(18px,-18px) rotate(8deg);
-  }
+.btns{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
 
-  /* Dog */
-  #dog{
-    position:fixed;
-    width:120px;
-    height:auto;
-    top:60%;
-    left:0;
-    opacity:0;
-    pointer-events:none;
-    z-index:3;
-    filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
-    transform: translateX(0) scaleX(-1); /* default facing left (when running away) */
-    will-change: left, top, opacity, transform;
-  }
+button{
+  padding:10px 16px;
+  font-size: clamp(16px, 4.2vw, 18px);
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+}
 
-  @keyframes bob {
-    0%,100% { transform: translateY(0) scaleX(var(--face)); }
-    50% { transform: translateY(-4px) scaleX(var(--face)); }
-  }
+#yesBtn{ background:#ff4d7d; color:white; }
+#noBtn{ background:white; }
 
-  .hidden{ display:none !important; }
+.msg{
+  margin-top:12px;
+  min-height:28px;
+  font-size: clamp(18px, 5vw, 22px);
+  font-weight:800;
+}
+
+/* LAMAS */
+.llama{
+  position:fixed;
+  width:210px;
+  pointer-events:none;
+  z-index:0;
+  transition:.5s ease;
+}
+
+.llama-right{
+  right:-115px;
+  bottom:-110px;
+  transform: translate(-18px,-18px) rotate(-8deg);
+}
+
+.llama-left{
+  left:-115px;
+  bottom:-110px;
+  transform: translate(18px,-18px) rotate(8deg);
+}
+
+/* DOG */
+#dog{
+  position:fixed;
+  width:120px;
+  opacity:0;
+  pointer-events:none;
+  z-index:3;
+  transform: scaleX(-1);
+}
+
+/* Confetti canvas */
+#confetti{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+}
 </style>
 </head>
 
 <body>
-  <canvas id="confetti"></canvas>
 
-  <img id="llama" class="llama llama-right" src="lama1.png" alt="">
-  <img id="dog" src="pejsek.png" alt="">
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-heart">💖</div>
+  <div class="loader-text">Načítám překvapení...</div>
+</div>
 
-  <div class="card">
-    <h1>Budeš můj Valentýn?</h1>
+<canvas id="confetti"></canvas>
 
-    <div class="btns" id="buttons">
-      <button id="yesBtn" type="button">ANO</button>
-      <button id="noBtn" type="button">NE</button>
-    </div>
+<img id="llama" class="llama llama-right" src="lama1.png">
+<img id="dog" src="pejsek.png">
 
-    <div class="msg" id="msg"></div>
+<div class="card">
+  <h1>Budeš můj Valentýn?</h1>
+  <div class="btns" id="buttons">
+    <button id="yesBtn">ANO</button>
+    <button id="noBtn">NE</button>
   </div>
+  <div class="msg" id="msg"></div>
+</div>
 
 <script>
-  const llama = document.getElementById('llama');
-  const dog   = document.getElementById('dog');
-  const yesBtn = document.getElementById('yesBtn');
-  const noBtn  = document.getElementById('noBtn');
-  const msg    = document.getElementById('msg');
-  const buttons = document.getElementById('buttons');
+/* ================= PRELOAD ================= */
 
-  let noUsed = false;
+function preloadImages(sources){
+  return Promise.all(
+    sources.map(src => new Promise((resolve)=>{
+      const img = new Image();
+      img.src = src;
+      img.onload = resolve;
+      img.onerror = resolve;
+    }))
+  );
+}
 
-  function swapToLama2Left() {
-    llama.src = 'lama2.png';
-    llama.classList.remove('llama-right');
-    llama.classList.add('llama-left');
+window.addEventListener("load", async ()=>{
+  await preloadImages(["lama1.png","lama2.png","pejsek.png"]);
+  document.getElementById("loader").classList.add("hidden");
+});
+
+/* ================= LOGIC ================= */
+
+const llama = document.getElementById('llama');
+const dog   = document.getElementById('dog');
+const yesBtn = document.getElementById('yesBtn');
+const noBtn  = document.getElementById('noBtn');
+const msg    = document.getElementById('msg');
+const buttons = document.getElementById('buttons');
+
+noBtn.addEventListener('click', async ()=>{
+  llama.src = "lama2.png";
+  llama.classList.remove("llama-right");
+  llama.classList.add("llama-left");
+
+  const rect = noBtn.getBoundingClientRect();
+  const dogW = 120;
+
+  dog.style.top = rect.top + "px";
+  dog.style.left = (window.innerWidth + dogW) + "px";
+  dog.style.opacity = "1";
+
+  // běh k tlačítku
+  dog.style.transition = "left 1.2s ease";
+  setTimeout(()=>{
+    dog.style.left = (rect.left) + "px";
+  },50);
+
+  // zmizení tlačítka
+  setTimeout(()=>{
+    noBtn.style.opacity="0";
+    noBtn.style.display="none";
+  },1200);
+
+  // útěk doleva
+  setTimeout(()=>{
+    dog.style.transition="left 1.6s linear";
+    dog.style.left = (-dogW - 50) + "px";
+  },1400);
+
+  setTimeout(()=>{
+    dog.style.opacity="0";
+  },2900);
+});
+
+/* ================= CONFETTI ================= */
+
+const canvas = document.getElementById('confetti');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function runConfetti(){
+  const pieces = [];
+  for(let i=0;i<120;i++){
+    pieces.push({
+      x:Math.random()*canvas.width,
+      y:-20,
+      size:6+Math.random()*6,
+      speed:2+Math.random()*3
+    });
   }
 
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-  async function dogRunRightToButtonThenLeftAway() {
-    if (noUsed) return;
-    noUsed = true;
-
-    swapToLama2Left();
-
-    const rect = noBtn.getBoundingClientRect();
-
-    // lane aligned with button center
-    const dogW = 120;
-    const dogH = 90;
-    const laneY = Math.max(20, Math.min(window.innerHeight - dogH - 20, rect.top + rect.height/2 - dogH/2));
-    dog.style.top = laneY + 'px';
-
-    // Start from RIGHT, facing LEFT while approaching button (run right->left? Actually from right to button: moving left)
-    dog.style.opacity = '1';
-    dog.style.transition = 'none';
-    dog.style.left = (window.innerWidth + dogW + 60) + 'px';  // offscreen right
-    dog.style.setProperty('--face', '-1'); // face left
-    dog.style.animation = 'bob .35s ease-in-out infinite';
-    void dog.offsetWidth;
-
-    // Phase 1: run from right to the button
-    const meetX = rect.left + rect.width - (dogW * 0.25); // snout near button
-    dog.style.transition = 'left 1.25s cubic-bezier(.2,.9,.2,1)';
-    dog.style.left = meetX + 'px';
-
-    await sleep(1300);
-
-    // Button disappears (clean)
-    noBtn.style.transition = 'opacity .15s ease, transform .15s ease';
-    noBtn.style.opacity = '0';
-    noBtn.style.transform = 'scale(0.92)';
-    await sleep(170);
-    noBtn.classList.add('hidden');
-
-    // Phase 2: dog runs away to LEFT (still facing left)
-    dog.style.transition = 'left 1.8s linear';
-    dog.style.left = (-dogW - 80) + 'px';
-
-    // Fade out near the end
-    setTimeout(() => { dog.style.opacity = '0'; }, 1500);
-
-    await sleep(1850);
-    dog.style.animation = 'none';
+  function update(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.y+=p.speed;
+      ctx.fillStyle=`hsl(${Math.random()*360},70%,70%)`;
+      ctx.fillRect(p.x,p.y,p.size,p.size);
+    });
+    requestAnimationFrame(update);
   }
+  update();
+}
 
-  noBtn.addEventListener('click', dogRunRightToButtonThenLeftAway);
-
-  // --- Confetti (mobile friendly) ---
-  const canvas = document.getElementById('confetti');
-  const ctx = canvas.getContext('2d');
-
-  function resizeCanvas(){
-    canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
-    canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-
-  function runConfetti(durationMs = 5500){
-    const pieces = [];
-    const count = Math.min(140, Math.floor(window.innerWidth / 3));
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-
-    for(let i=0;i<count;i++){
-      pieces.push({
-        x: Math.random()*W,
-        y: -20 - Math.random()*H*0.4,
-        w: 6 + Math.random()*6,
-        h: 8 + Math.random()*10,
-        vy: 2 + Math.random()*4,
-        vx: -1.2 + Math.random()*2.4,
-        rot: Math.random()*Math.PI,
-        vr: -0.12 + Math.random()*0.24,
-        r: 180 + Math.floor(Math.random()*75),
-        g: 120 + Math.floor(Math.random()*110),
-        b: 150 + Math.floor(Math.random()*105),
-        a: 0.9
-      });
-    }
-
-    const start = performance.now();
-
-    function frame(t){
-      const elapsed = t - start;
-      ctx.clearRect(0,0,W,H);
-
-      for(const p of pieces){
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.vr;
-
-        if(p.x < -40) p.x = W+40;
-        if(p.x > W+40) p.x = -40;
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.a})`;
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
-      }
-
-      if(elapsed < durationMs){
-        requestAnimationFrame(frame);
-      } else {
-        ctx.clearRect(0,0,W,H);
-      }
-    }
-    requestAnimationFrame(frame);
-  }
-
-  yesBtn.addEventListener('click', () => {
-    msg.textContent = 'Miluju tě! 💖';
-    buttons.classList.add('hidden');
-    runConfetti(5500);
-  });
+yesBtn.addEventListener("click",()=>{
+  msg.textContent="Miluju tě! 💖";
+  buttons.style.display="none";
+  runConfetti();
+});
 </script>
+
 </body>
 </html>
