@@ -27,7 +27,7 @@
     padding:16px;
   }
 
-  /* Confetti canvas overlay */
+  /* Confetti overlay */
   #confetti{
     position:fixed;
     inset:0;
@@ -37,7 +37,7 @@
     z-index:1;
   }
 
-  /* Center card (mobile first) */
+  /* Mobile-first card */
   .card{
     width:min(360px, 92vw);
     background:var(--card);
@@ -94,7 +94,7 @@
     pointer-events:none;
     z-index:0;
     filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
-    transition: left .5s ease, right .5s ease, bottom .5s ease, transform .5s ease, opacity .2s ease;
+    transition: left .5s ease, right .5s ease, bottom .5s ease, transform .5s ease;
   }
 
   /* lama1 – pravý dolní roh, lehce doleva */
@@ -116,20 +116,19 @@
     position:fixed;
     width:120px;
     height:auto;
-    left:-200px; /* start offscreen */
     top:60%;
-    transform: translateX(0);
+    left:0;
     opacity:0;
     pointer-events:none;
     z-index:3;
     filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
-    will-change: transform, left, top, opacity;
+    transform: translateX(0) scaleX(-1); /* default facing left (when running away) */
+    will-change: left, top, opacity, transform;
   }
 
-  /* Make it feel a bit lively */
   @keyframes bob {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    0%,100% { transform: translateY(0) scaleX(var(--face)); }
+    50% { transform: translateY(-4px) scaleX(var(--face)); }
   }
 
   .hidden{ display:none !important; }
@@ -169,79 +168,56 @@
     llama.classList.add('llama-left');
   }
 
-  // --- Better "steal NO" animation (2 phases) ---
-  async function stealNoButton() {
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  async function dogRunRightToButtonThenLeftAway() {
     if (noUsed) return;
     noUsed = true;
 
     swapToLama2Left();
 
-    // lock button in place (so layout won't jump)
     const rect = noBtn.getBoundingClientRect();
 
-    // Place dog at same "lane" as the button
+    // lane aligned with button center
     const dogW = 120;
-    const dogH = 90; // approx visual
+    const dogH = 90;
     const laneY = Math.max(20, Math.min(window.innerHeight - dogH - 20, rect.top + rect.height/2 - dogH/2));
-
-    dog.style.opacity = '1';
     dog.style.top = laneY + 'px';
-    dog.style.left = (-dogW - 40) + 'px';
+
+    // Start from RIGHT, facing LEFT while approaching button (run right->left? Actually from right to button: moving left)
+    dog.style.opacity = '1';
     dog.style.transition = 'none';
+    dog.style.left = (window.innerWidth + dogW + 60) + 'px';  // offscreen right
+    dog.style.setProperty('--face', '-1'); // face left
     dog.style.animation = 'bob .35s ease-in-out infinite';
     void dog.offsetWidth;
 
-    // Create a "stolen" copy of the NO button (so the original can disappear cleanly)
-    const stolen = noBtn.cloneNode(true);
-    stolen.id = 'stolenNo';
-    stolen.textContent = 'NE';
-    stolen.style.position = 'fixed';
-    stolen.style.left = rect.left + 'px';
-    stolen.style.top  = rect.top  + 'px';
-    stolen.style.margin = '0';
-    stolen.style.zIndex = '4';
-    stolen.style.pointerEvents = 'none';
-    document.body.appendChild(stolen);
-
-    // Hide original NO button to avoid weirdness
-    noBtn.style.visibility = 'hidden';
-
-    // Phase 1: dog runs to the button (ease-out, visible)
-    const meetX = rect.left - dogW * 0.55; // dog nose near button
-    dog.style.transition = 'left 0.95s cubic-bezier(.2,.9,.2,1)';
+    // Phase 1: run from right to the button
+    const meetX = rect.left + rect.width - (dogW * 0.25); // snout near button
+    dog.style.transition = 'left 1.25s cubic-bezier(.2,.9,.2,1)';
     dog.style.left = meetX + 'px';
 
-    // Wait to "arrive"
-    await new Promise(r => setTimeout(r, 980));
+    await sleep(1300);
 
-    // Small "grab" effect
-    stolen.style.transition = 'transform .12s ease';
-    stolen.style.transform = 'scale(0.92) rotate(-4deg)';
-    await new Promise(r => setTimeout(r, 130));
-    stolen.style.transform = 'scale(1) rotate(0deg)';
+    // Button disappears (clean)
+    noBtn.style.transition = 'opacity .15s ease, transform .15s ease';
+    noBtn.style.opacity = '0';
+    noBtn.style.transform = 'scale(0.92)';
+    await sleep(170);
+    noBtn.classList.add('hidden');
 
-    // Phase 2: dog + button run to the right (linear, slightly slower)
-    const endXDog = window.innerWidth + dogW + 80;
-    const distanceBtn = (window.innerWidth + 260) - rect.left;
-
-    dog.style.transition = 'left 2.8s linear';
-    dog.style.left = endXDog + 'px';
-
-    stolen.style.transition = 'transform 2.8s linear, opacity .25s ease';
-    stolen.style.transform = `translateX(${distanceBtn}px) rotate(12deg)`;
+    // Phase 2: dog runs away to LEFT (still facing left)
+    dog.style.transition = 'left 1.8s linear';
+    dog.style.left = (-dogW - 80) + 'px';
 
     // Fade out near the end
-    setTimeout(() => { stolen.style.opacity = '0'; }, 2500);
+    setTimeout(() => { dog.style.opacity = '0'; }, 1500);
 
-    // Cleanup
-    setTimeout(() => {
-      dog.style.opacity = '0';
-      dog.style.animation = 'none';
-      stolen.remove();
-    }, 2900);
+    await sleep(1850);
+    dog.style.animation = 'none';
   }
 
-  noBtn.addEventListener('click', stealNoButton);
+  noBtn.addEventListener('click', dogRunRightToButtonThenLeftAway);
 
   // --- Confetti (mobile friendly) ---
   const canvas = document.getElementById('confetti');
@@ -257,9 +233,9 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  function runConfetti(durationMs = 5200){
+  function runConfetti(durationMs = 5500){
     const pieces = [];
-    const count = Math.min(140, Math.floor(window.innerWidth / 3)); // mobile-safe
+    const count = Math.min(140, Math.floor(window.innerWidth / 3));
     const W = window.innerWidth;
     const H = window.innerHeight;
 
@@ -273,7 +249,6 @@
         vx: -1.2 + Math.random()*2.4,
         rot: Math.random()*Math.PI,
         vr: -0.12 + Math.random()*0.24,
-        // pastel-ish random
         r: 180 + Math.floor(Math.random()*75),
         g: 120 + Math.floor(Math.random()*110),
         b: 150 + Math.floor(Math.random()*105),
@@ -292,10 +267,6 @@
         p.y += p.vy;
         p.rot += p.vr;
 
-        // little drift
-        p.vx += (-0.02 + Math.random()*0.04);
-
-        // wrap sides
         if(p.x < -40) p.x = W+40;
         if(p.x > W+40) p.x = -40;
 
