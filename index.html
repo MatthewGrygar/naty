@@ -43,10 +43,11 @@ body{
 
 /* =============== LAYERS =============== */
 #confetti{ position:fixed; inset:0; pointer-events:none; z-index:1; }
-#tanynyLayer{ position:fixed; inset:0; pointer-events:none; z-index:4; } /* above dog/button */
+#tanynyLayer{ position:fixed; inset:0; pointer-events:none; z-index:4; }
 
 /* =============== CONTENT =============== */
 .card{
+  position:relative;
   width:min(360px, 92vw);
   background:var(--card);
   border-radius:18px;
@@ -81,6 +82,33 @@ button{
   font-weight:800;
 }
 
+/* Full-card love message shown after YES */
+#loveOverlay{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:18px 14px;
+  border-radius:18px;
+}
+#loveOverlay .loveText{
+  font-weight:900;
+  line-height:1.05;
+  text-shadow:0 10px 22px rgba(0,0,0,.10);
+}
+#loveOverlay .loveText .big{
+  font-size: clamp(30px, 9vw, 44px);
+}
+#loveOverlay .loveText .small{
+  display:block;
+  margin-top:10px;
+  font-size: clamp(18px, 5.5vw, 22px);
+  font-weight:800;
+  opacity:.95;
+}
+
 /* Lama3 above card */
 #lama3Wrap{
   position:fixed;
@@ -98,12 +126,13 @@ button{
   filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
   transform-origin: 50% 80%;
 }
+/* slower dance */
 @keyframes dance {
   0%   { transform: rotate(-10deg) translateY(0); }
   50%  { transform: rotate(10deg)  translateY(-4px); }
   100% { transform: rotate(-10deg) translateY(0); }
 }
-#lama3.dance{ animation: dance .55s ease-in-out infinite; }
+#lama3.dance{ animation: dance .9s ease-in-out infinite; } /* <- pomaleji */
 
 /* LAMAS */
 .llama{
@@ -144,14 +173,14 @@ button{
   text-shadow: 0 8px 18px rgba(0,0,0,.14);
   transform: translate(-50%, -50%) scale(.9);
   opacity:0;
-  animation: tanynyPop 1.25s ease-out forwards;
+  animation: tanynyPop 1.35s ease-out forwards;
   user-select:none;
   white-space:nowrap;
 }
 @keyframes tanynyPop{
   0%   { opacity:0; transform: translate(-50%,-50%) scale(.75); }
   15%  { opacity:1; transform: translate(-50%,-50%) scale(1); }
-  100% { opacity:0; transform: translate(-50%,-80%) scale(1.06); }
+  100% { opacity:0; transform: translate(-50%,-78%) scale(1.06); }
 }
 </style>
 </head>
@@ -174,13 +203,23 @@ button{
 <img id="llama" class="llama llama-right" src="lama1.png" alt="">
 <img id="dog" src="pejsek.png" alt="">
 
-<div class="card">
-  <h1>Budeš můj Valentýn?</h1>
+<div class="card" id="card">
+  <h1 id="question">Budeš můj Valentýn?</h1>
+
   <div class="btns" id="buttons">
     <button id="yesBtn" type="button">ANO</button>
     <button id="noBtn" type="button">NE</button>
   </div>
+
   <div class="msg" id="msg"></div>
+
+  <!-- overlay message after YES -->
+  <div id="loveOverlay" aria-live="polite">
+    <div class="loveText">
+      <div class="big">Milujeme tě!</div>
+      <span class="small">Pedro a Matthew</span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -200,7 +239,7 @@ window.addEventListener("load", async ()=>{
   document.getElementById("loader").classList.add("hidden");
 });
 
-/* =============== LOGIC =============== */
+/* =============== ELEMENTS =============== */
 const llama = document.getElementById('llama');
 const dog   = document.getElementById('dog');
 const yesBtn = document.getElementById('yesBtn');
@@ -212,6 +251,9 @@ const lama3Wrap = document.getElementById('lama3Wrap');
 const lama3Img  = document.getElementById('lama3');
 const tanynyLayer = document.getElementById('tanynyLayer');
 
+const loveOverlay = document.getElementById('loveOverlay');
+const question = document.getElementById('question');
+
 let noUsed = false;
 let tanynyTimer = null;
 
@@ -219,7 +261,7 @@ noBtn.addEventListener('click', ()=>{
   if(noUsed) return;
   noUsed = true;
 
-  // Přepnutí lamy na lama2 vlevo dole
+  // switch llama to left
   llama.src = "lama2.png";
   llama.classList.remove("llama-right");
   llama.classList.add("llama-left");
@@ -227,17 +269,15 @@ noBtn.addEventListener('click', ()=>{
   const rect = noBtn.getBoundingClientRect();
   const dogW = 120;
 
-  // Pejsek start zleva -> k tlačítku -> uteče doprava
+  // dog from left -> button -> run right
   dog.style.opacity = "1";
   dog.style.top = rect.top + "px";
   dog.style.left = (-dogW - 60) + "px";
-  dog.style.transform = "scaleX(1)"; // čumák doprava
+  dog.style.transform = "scaleX(1)";
 
-  // Běh k tlačítku
   dog.style.transition = "left 1.2s ease";
   setTimeout(()=>{ dog.style.left = (rect.left - 10) + "px"; }, 50);
 
-  // Zmizení tlačítka
   setTimeout(()=>{
     noBtn.style.transition = "opacity .15s ease, transform .15s ease";
     noBtn.style.opacity="0";
@@ -245,13 +285,11 @@ noBtn.addEventListener('click', ()=>{
     setTimeout(()=> noBtn.classList.add("hidden"), 170);
   }, 1200);
 
-  // Útěk doprava
   setTimeout(()=>{
     dog.style.transition="left 1.6s linear";
     dog.style.left = (window.innerWidth + dogW + 80) + "px";
   }, 1400);
 
-  // Zmizí mimo obrazovku
   setTimeout(()=>{ dog.style.opacity="0"; }, 2800);
 });
 
@@ -316,53 +354,54 @@ function runConfetti(durationMs=5500){
   requestAnimationFrame(frame);
 }
 
-/* =============== TANYNY POPS =============== */
+/* =============== TANYNY (slower) =============== */
 function spawnTanyny(){
   const el = document.createElement('div');
   el.className = 'tanyny';
   el.textContent = 'TANYNY!';
 
-  const pad = 20;
+  const pad = 22;
   const x = pad + Math.random() * (window.innerWidth - pad*2);
   const y = pad + Math.random() * (window.innerHeight - pad*2);
 
   el.style.left = x + 'px';
   el.style.top  = y + 'px';
 
-  // Slight random rotation for fun
-  const rot = (-12 + Math.random()*24).toFixed(1);
+  const rot = (-10 + Math.random()*20).toFixed(1);
   el.style.transform = `translate(-50%,-50%) rotate(${rot}deg) scale(.9)`;
 
   tanynyLayer.appendChild(el);
-  setTimeout(()=> el.remove(), 1300);
+  setTimeout(()=> el.remove(), 1400);
 }
 
 function startTanynyBurst(ms=5500){
-  // spawn a bunch quickly, then slow down a bit
   const start = performance.now();
 
-  // immediate burst
-  for(let i=0;i<10;i++) setTimeout(spawnTanyny, i*90);
+  // smaller initial burst (slower overall)
+  for(let i=0;i<6;i++) setTimeout(spawnTanyny, i*180);
 
-  // ongoing pops
+  // ongoing slower pops
   tanynyTimer = setInterval(()=>{
     spawnTanyny();
-    if (Math.random() > 0.6) spawnTanyny();
+    if (Math.random() > 0.78) spawnTanyny(); // occasionally 2
     if (performance.now() - start > ms){
       clearInterval(tanynyTimer);
       tanynyTimer = null;
     }
-  }, 260);
+  }, 520); // <- pomaleji
 }
 
 /* =============== YES =============== */
 yesBtn.addEventListener("click",()=>{
-  msg.textContent="Miluju tě! 💖";
-  buttons.classList.add("hidden");
+  // hide question + buttons, show overlay message
+  question.style.display = "none";
+  buttons.style.display = "none";
+  msg.textContent = ""; // clean
+  loveOverlay.style.display = "flex";
 
-  // show dancing lama3 above card
+  // show dancing lama3 above
   lama3Wrap.style.display = "block";
-  lama3Img.classList.add("dance");
+  lama3Img.classList.add("dance"); // already slower in CSS
 
   // effects
   runConfetti(5500);
