@@ -25,7 +25,6 @@ body{
 }
 
 /* =============== LOADER =============== */
-
 #loader{
   position:fixed;
   inset:0;
@@ -37,30 +36,16 @@ body{
   z-index:9999;
   transition:opacity .6s ease, visibility .6s ease;
 }
+.loader-heart{ font-size:40px; animation:pulse 1s infinite; }
+@keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.2);} }
+.loader-text{ margin-top:10px; font-weight:600; }
+#loader.hidden{ opacity:0; visibility:hidden; }
 
-.loader-heart{
-  font-size:40px;
-  animation:pulse 1s infinite;
-}
-
-@keyframes pulse{
-  0%,100%{transform:scale(1);}
-  50%{transform:scale(1.2);}
-}
-
-.loader-text{
-  margin-top:10px;
-  font-weight:600;
-}
-
-/* hidden state */
-#loader.hidden{
-  opacity:0;
-  visibility:hidden;
-}
+/* =============== LAYERS =============== */
+#confetti{ position:fixed; inset:0; pointer-events:none; z-index:1; }
+#tanynyLayer{ position:fixed; inset:0; pointer-events:none; z-index:4; } /* above dog/button */
 
 /* =============== CONTENT =============== */
-
 .card{
   width:min(360px, 92vw);
   background:var(--card);
@@ -73,16 +58,9 @@ body{
   z-index:2;
 }
 
-h1{
-  margin:0 0 12px;
-  font-size: clamp(22px, 6vw, 30px);
-}
+h1{ margin:0 0 12px; font-size: clamp(22px, 6vw, 30px); }
 
-.btns{
-  display:flex;
-  gap:10px;
-  justify-content:center;
-}
+.btns{ display:flex; gap:10px; justify-content:center; }
 
 button{
   padding:10px 16px;
@@ -90,6 +68,7 @@ button{
   border:none;
   border-radius:999px;
   cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #yesBtn{ background:#ff4d7d; color:white; }
@@ -102,6 +81,30 @@ button{
   font-weight:800;
 }
 
+/* Lama3 above card */
+#lama3Wrap{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  top: max(10px, env(safe-area-inset-top));
+  z-index:3;
+  display:none;
+  width:min(220px, 55vw);
+  text-align:center;
+}
+#lama3{
+  width:100%;
+  height:auto;
+  filter: drop-shadow(0 14px 18px rgba(0,0,0,.18));
+  transform-origin: 50% 80%;
+}
+@keyframes dance {
+  0%   { transform: rotate(-10deg) translateY(0); }
+  50%  { transform: rotate(10deg)  translateY(-4px); }
+  100% { transform: rotate(-10deg) translateY(0); }
+}
+#lama3.dance{ animation: dance .55s ease-in-out infinite; }
+
 /* LAMAS */
 .llama{
   position:fixed;
@@ -110,13 +113,11 @@ button{
   z-index:0;
   transition:.5s ease;
 }
-
 .llama-right{
   right:-115px;
   bottom:-110px;
   transform: translate(-18px,-18px) rotate(-8deg);
 }
-
 .llama-left{
   left:-115px;
   bottom:-110px;
@@ -133,12 +134,24 @@ button{
   will-change:left, top, opacity, transform;
 }
 
-/* Confetti canvas */
-#confetti{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:1;
+/* TANYNY pop text */
+.tanyny{
+  position:absolute;
+  font-weight:900;
+  font-size: clamp(18px, 6vw, 34px);
+  letter-spacing: 1px;
+  color: rgba(255, 77, 125, .95);
+  text-shadow: 0 8px 18px rgba(0,0,0,.14);
+  transform: translate(-50%, -50%) scale(.9);
+  opacity:0;
+  animation: tanynyPop 1.25s ease-out forwards;
+  user-select:none;
+  white-space:nowrap;
+}
+@keyframes tanynyPop{
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(.75); }
+  15%  { opacity:1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity:0; transform: translate(-50%,-80%) scale(1.06); }
 }
 </style>
 </head>
@@ -152,6 +165,11 @@ button{
 </div>
 
 <canvas id="confetti"></canvas>
+<div id="tanynyLayer"></div>
+
+<div id="lama3Wrap" aria-hidden="true">
+  <img id="lama3" src="lama3.png" alt="">
+</div>
 
 <img id="llama" class="llama llama-right" src="lama1.png" alt="">
 <img id="dog" src="pejsek.png" alt="">
@@ -167,7 +185,6 @@ button{
 
 <script>
 /* =============== PRELOAD =============== */
-
 function preloadImages(sources){
   return Promise.all(
     sources.map(src => new Promise((resolve)=>{
@@ -178,14 +195,12 @@ function preloadImages(sources){
     }))
   );
 }
-
 window.addEventListener("load", async ()=>{
-  await preloadImages(["lama1.png","lama2.png","pejsek.png"]);
+  await preloadImages(["lama1.png","lama2.png","lama3.png","pejsek.png"]);
   document.getElementById("loader").classList.add("hidden");
 });
 
 /* =============== LOGIC =============== */
-
 const llama = document.getElementById('llama');
 const dog   = document.getElementById('dog');
 const yesBtn = document.getElementById('yesBtn');
@@ -193,7 +208,12 @@ const noBtn  = document.getElementById('noBtn');
 const msg    = document.getElementById('msg');
 const buttons = document.getElementById('buttons');
 
+const lama3Wrap = document.getElementById('lama3Wrap');
+const lama3Img  = document.getElementById('lama3');
+const tanynyLayer = document.getElementById('tanynyLayer');
+
 let noUsed = false;
+let tanynyTimer = null;
 
 noBtn.addEventListener('click', ()=>{
   if(noUsed) return;
@@ -207,7 +227,7 @@ noBtn.addEventListener('click', ()=>{
   const rect = noBtn.getBoundingClientRect();
   const dogW = 120;
 
-  // Pejsek start zleva, míří k tlačítku
+  // Pejsek start zleva -> k tlačítku -> uteče doprava
   dog.style.opacity = "1";
   dog.style.top = rect.top + "px";
   dog.style.left = (-dogW - 60) + "px";
@@ -215,32 +235,27 @@ noBtn.addEventListener('click', ()=>{
 
   // Běh k tlačítku
   dog.style.transition = "left 1.2s ease";
-  setTimeout(()=>{
-    dog.style.left = (rect.left - 10) + "px";
-  },50);
+  setTimeout(()=>{ dog.style.left = (rect.left - 10) + "px"; }, 50);
 
-  // Zmizení tlačítka (jakmile doběhne)
+  // Zmizení tlačítka
   setTimeout(()=>{
     noBtn.style.transition = "opacity .15s ease, transform .15s ease";
     noBtn.style.opacity="0";
     noBtn.style.transform="scale(0.92)";
     setTimeout(()=> noBtn.classList.add("hidden"), 170);
-  },1200);
+  }, 1200);
 
   // Útěk doprava
   setTimeout(()=>{
     dog.style.transition="left 1.6s linear";
     dog.style.left = (window.innerWidth + dogW + 80) + "px";
-  },1400);
+  }, 1400);
 
   // Zmizí mimo obrazovku
-  setTimeout(()=>{
-    dog.style.opacity="0";
-  },2800);
+  setTimeout(()=>{ dog.style.opacity="0"; }, 2800);
 });
 
 /* =============== CONFETTI =============== */
-
 const canvas = document.getElementById('confetti');
 const ctx = canvas.getContext('2d');
 
@@ -278,16 +293,12 @@ function runConfetti(durationMs=5500){
   }
 
   const start = performance.now();
-
   function frame(t){
     const elapsed = t - start;
     ctx.clearRect(0,0,W,H);
 
     for(const p of pieces){
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
       if(p.x < -40) p.x = W+40;
       if(p.x > W+40) p.x = -40;
 
@@ -299,19 +310,63 @@ function runConfetti(durationMs=5500){
       ctx.restore();
     }
 
-    if(elapsed < durationMs){
-      requestAnimationFrame(frame);
-    } else {
-      ctx.clearRect(0,0,W,H);
-    }
+    if(elapsed < durationMs) requestAnimationFrame(frame);
+    else ctx.clearRect(0,0,W,H);
   }
   requestAnimationFrame(frame);
 }
 
+/* =============== TANYNY POPS =============== */
+function spawnTanyny(){
+  const el = document.createElement('div');
+  el.className = 'tanyny';
+  el.textContent = 'TANYNY!';
+
+  const pad = 20;
+  const x = pad + Math.random() * (window.innerWidth - pad*2);
+  const y = pad + Math.random() * (window.innerHeight - pad*2);
+
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+
+  // Slight random rotation for fun
+  const rot = (-12 + Math.random()*24).toFixed(1);
+  el.style.transform = `translate(-50%,-50%) rotate(${rot}deg) scale(.9)`;
+
+  tanynyLayer.appendChild(el);
+  setTimeout(()=> el.remove(), 1300);
+}
+
+function startTanynyBurst(ms=5500){
+  // spawn a bunch quickly, then slow down a bit
+  const start = performance.now();
+
+  // immediate burst
+  for(let i=0;i<10;i++) setTimeout(spawnTanyny, i*90);
+
+  // ongoing pops
+  tanynyTimer = setInterval(()=>{
+    spawnTanyny();
+    if (Math.random() > 0.6) spawnTanyny();
+    if (performance.now() - start > ms){
+      clearInterval(tanynyTimer);
+      tanynyTimer = null;
+    }
+  }, 260);
+}
+
+/* =============== YES =============== */
 yesBtn.addEventListener("click",()=>{
   msg.textContent="Miluju tě! 💖";
   buttons.classList.add("hidden");
+
+  // show dancing lama3 above card
+  lama3Wrap.style.display = "block";
+  lama3Img.classList.add("dance");
+
+  // effects
   runConfetti(5500);
+  startTanynyBurst(5500);
 });
 </script>
 
